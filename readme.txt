@@ -1,5 +1,5 @@
 === WP-Library ===
-Contributors: zaus
+Contributors: atlanticbt, zaus, tnblueswirl
 Donate link: http://atlanticbt.com
 Tags: core, extensions, common, reuse, library, mvc, model-view-controller, options, query builder
 Requires at least: 3.0
@@ -51,10 +51,10 @@ Provides a foundation and extensions for/to common Wordpress developer functions
 Alternatively, you could instead create another folder at the same level as your plugins directory, called `library`.  If you do so, you must explicitly include the "routing" file `wp-library-init.php` from somewhere (i.e. your theme `functions.php`).
 
 So your structure could look something like:
-		`wp-content`
-			- `plugins`
-			- `themes`
-			- `library`
+    `wp-content`
+    	- `plugins`
+    	- `themes`
+    	- `library`
 
 
 == Frequently Asked Questions ==
@@ -108,6 +108,9 @@ the directory of the stable readme.txt, so in this case, `/tags/4.3/screenshot-1
 2. This is the second screen shot
 
 == Changelog ==
+
+= 0.3.1 =
+* more authors
 
 = 0.3 =
 * turned into a plugin
