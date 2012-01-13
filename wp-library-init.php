@@ -3,7 +3,7 @@
 Plugin Name: WP-Library
 Plugin URI: http://atlanticbt.com/
 Description: Provides a foundation and extensions for/to common Wordpress functions or tasks, such as creating and installing plugins, making complex database queries, etc
-Version: 0.3.1
+Version: 0.4
 Author: atlanticbt, zaus, tnblueswirl
 Author URI: http://www.atlanticbt.com/
 License: GPLv2 or later
@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * @subpackage WP_Library
  * @since MM-Solid Rock 1.0, MPS Society 1.0
  * 
- * @version 0.3.1
+ * @version 0.4
  * 
  * HISTORY:
  * 	- 0.1	creation, shared stuff
@@ -41,6 +41,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * 	- 0.2.1	form validation, lang
  *	- 0.3	turned into a plugin
  * 	- 0.3.1	authors
+ * 	- 0.4	integrating various updates
  */
 /*
  * Use this section to include other library files that should be available globally.

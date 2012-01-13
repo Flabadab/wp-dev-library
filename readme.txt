@@ -41,6 +41,8 @@ Provides a foundation and extensions for/to common Wordpress developer functions
 * wp_plugin_installer - wrapper object for handling plugin installation actions - (un)install, (de)activate, upgrade
 * wp_plugin_shell - extend this when making a plugin to get access to commonly used stuff for plugins
 * wp_querybuilder - use this chainable object to create mysql queries, built-in `prepare`
+* impersonation - now you can see the site as though you were another user
+* payment gateway shell - a place to start when integrating e-commerce
 
 == Installation ==
 
