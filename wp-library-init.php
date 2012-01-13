@@ -4,8 +4,8 @@ Plugin Name: WP-Library
 Plugin URI: http://atlanticbt.com/
 Description: Provides a foundation and extensions for/to common Wordpress functions or tasks, such as creating and installing plugins, making complex database queries, etc
 Version: 0.3
-Author: atlanticbt, zaus
-Author URI: http://www.atlanticbt.com/employees/view/jeremy-schwartz.php
+Author: atlanticbt,zaus
+Author URI: http://www.atlanticbt.com/
 License: GPLv2 or later
 */
 
