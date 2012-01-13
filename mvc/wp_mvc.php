@@ -6,13 +6,13 @@ define('AJAX_REQUEST',( isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) && strtolower
 /**
  * MVC-like Controller class, with autorouting etc
  * @author jeremys
- * 
+ *
  * @package WP_Library
  * @since 0.1
  *
  */
 class WP_Mvc_Controller {
-	
+
 	/**
 	 * prefixes for action method routing
 	 * @var string
@@ -22,19 +22,19 @@ class WP_Mvc_Controller {
 		, ACTION_KEY = 'action'
 		, PARAMS_KEY = 'params'
 		;
-	
+
 	/**
 	 * What to render as the shell
 	 * @var string
 	 */
 	public $template = 'layout', $template_source = NULL;
-		
+
 	/**
 	 * Routing variables - used to extract stuff from querystring
 	 * @var string
 	 */
 	protected $action_key, $params_key, $default_action = 'index';
-	
+
 	/**
 	 * Set the default action name
 	 * @param unknown_type $action_name
@@ -42,7 +42,7 @@ class WP_Mvc_Controller {
 	protected function set_default($action_name){
 		$this->default_action = $action_name;
 	}//--	fn	set_default
-	
+
 	/**
 	 * Set up default routing variables
 	 * @param $template_source {optional} usually pass __FILE__; used as base directory for template file
@@ -58,14 +58,14 @@ class WP_Mvc_Controller {
 		if( AJAX_REQUEST ){
 			$this->template = 'layout-ajax';
 		}
-		
+
 		/* TODO: figure out how micromvc does this
 		//Override PHP's default error handling if in debug mode
 		if(true === WP_DEBUG){set_error_handler(array('error','handler'));register_shutdown_function(array('error','fatal'));set_exception_handler(array('error','exception'));}
 		*/
 	}//--	fn	__construct
-	
-	
+
+
 	/**
 	 * Internal routing - based on URL/post, automagically process internal action method
 	 */
@@ -78,18 +78,21 @@ class WP_Mvc_Controller {
 			$is_post = false;
 		}
 		$action = self::get_action($this->action_key);
-		
+
 		//use default if none given
 		if( empty( $action ) ){
 			$action = $this->default_action;
 		}
 		$this->action = $action;
-		
+
 		//also perform nonce check on post
 		if( true === $is_post ){
 			check_admin_referer($action, 'mvc_nonce');	//maybe wp_verify_nonce?
 			//TODO: add links with wp_nonce_url( $actionurl, $action )
-			
+
+			// clean up POST values -- remove WP autoescaping (as of WP 3.0)
+			$_POST = stripslashes_deep($_POST);
+
 			//update action var with appropriate prefix for routing
 			$action = self::PREFIX_POST_ACTION . $action;
 		}
@@ -97,7 +100,7 @@ class WP_Mvc_Controller {
 			//update action var with appropriate prefix for routing
 			$action = self::PREFIX_ACTION . $action;
 		}
-		
+
 		//only run action if it exists
 		if( method_exists( $this, $action) ):
 			/*
@@ -128,7 +131,7 @@ class WP_Mvc_Controller {
 			throw new WP_MvcException("Invalid action {{$action}}", WP_MvcException::ACTION_DNE );
 		endif;
 	}//--	fn	_action
-	
+
 	/**
 	 * Admin page - caller for action routing; also include admin-specific stuff
 	 */
@@ -146,20 +149,20 @@ class WP_Mvc_Controller {
 		$this->_action();
 		$this->render();
 	}//--	fn	page
-	
+
 	/**
-	 * Check through given capabilities/roles, 
+	 * Check through given capabilities/roles,
 	 * @param array $capabilities list of roles or capabilities (used with current_user_can)
 	 * @return true if user is allowed, false if not.
 	 */
 	protected function allow( array $capabilities ) {
 		foreach($capabilities as $permission){
-			if( ! current_user_can( $permission ) ) return false;
+			if( ! current_user_can( trim($permission) ) ) return false;
 		}
 		return true;
 	}//--	fn	allow
-	
-	
+
+
 	/**
 	 * Get the given MVC parameter from the url
 	 * @param string $key {optional} if given, return value of specified parameter; if omitted, returns entire parameter list
@@ -167,10 +170,10 @@ class WP_Mvc_Controller {
 	 * @return mixed value or array of all param values
 	 */
 	static function get_param($key = NULL, $section = NULL){
-		//get params from request
-		$params = array_merge($_GET, $_POST);	//$_REQUEST?
+		//get params from request; UPDATE - wordpress already merges $_GET and $_POST into $_REQUEST
+		$params = $_REQUEST;
 		//originally, using custom parameter (SELF::PARAM_KEY):	$params = kv($_REQUEST,$query_field);
-		
+
 		//remove admin keys from list
 		if( is_admin() ) {
 			$remove_keys = array('post_type', 'page', 'message');
@@ -178,23 +181,23 @@ class WP_Mvc_Controller {
 				if( isset($params[$remove]) ) unset($params[$remove]);
 			}
 		}
-		
+
 		//if none given, return null
 		if( is_null($params) || empty($params) ) return array();
-		
+
 		/* no longer need to decode, as we're just using the regular POST/GET
 		//decode from querystring, parse to array
 		parse_str( urldecode($params) , $params);
 		*/
-		
+
 		//return all params if so requested
 		if( is_null($key) ) return $params;
-		
+
 		//return specific parameter
 		return v($params[$key]);
 	}//--	fn	get_param
-	
-	
+
+
 	/**
 	 * Get the given MVC action from the url
 	 * @param string $query_field {optional, defaults to ACTION_KEY} what part of the querystring holds the action value
@@ -203,9 +206,9 @@ class WP_Mvc_Controller {
 	static function get_action($query_field = self::ACTION_KEY){
 		return kv($_REQUEST, $query_field);
 	}//--	fn	param
-	
+
 	#region =============== RENDER ==================
-	
+
 	/**
 	 * Add a (temporary) flash message, like error or success
 	 * @param $msg
@@ -214,7 +217,7 @@ class WP_Mvc_Controller {
 		if( ! isset( $this->flash ) ) $this->flash = $msg;
 		else $this->flash .= $msg;
 	}//--	fn	addFlash
-	
+
 	/**
 	 * Render the final layout template
 	 * @param $template_source {optional} if given, use it as the view "module" directory instead of the THEME/MVC/View folder
@@ -225,7 +228,7 @@ class WP_Mvc_Controller {
 
 	#endregion =============== RENDER ==================
 
-	
+
 }///---	class	WP_Mvc_Controller
 
 
@@ -286,16 +289,15 @@ public function admin_url($controller = true, $action, $params = NULL, $use_esca
 	if( NULL !== $params ){
 		$url = wp_parse_args($url, $params);	//merge?
 	}
-	
+
 	$url = '/' . url() . '?' . http_build_query($url);
-	
+
 	return ($use_escape ? esc_attr( $url ) : $url);
 }//--	fn	admin_url
-
 }///---	class	WP_Mvc_View
 
 
-	
+
 
 /**
  * Form
@@ -357,7 +359,7 @@ class WP_Mvc_Form extends WP_Mvc_View {
 			}
 			return false;
 		}
-		
+
 		//otherwise, loop each field
 		foreach($fields as $field => &$options)
 		{
@@ -368,27 +370,27 @@ class WP_Mvc_Form extends WP_Mvc_View {
 				#'attributes' => array('id' => $field, 'name' => $field),
 				'container' => array('class'=>'field')
 			);
-			
+
 			//merge properties
 			$options = $options + $defaults;
 			//re-merge default attributes
-			$post_val = $this->validation->value($field, $section);
+			$post_val = ($options['type'] == 'submit') ? $options['value'] : $this->validation->value($field, $section);
 			$options['value'] = v($post_val, $options['value']);
 			#$options['value'] = v($defaults['value'], $options['value']);
-			
+
 			if( ! isset( $options['attributes'] ) ){ $options['attributes'] = array(); }
 			$options['attributes'] = array('id' => $section . '-' . $field, 'name' => $section.'['.$field.']') + $options['attributes'];
-			
+
 			//special RENDERING type for select, multiselect, textarea, radio, checkbox
-			if( ! in_array( $options['type'], array('select', 'textarea', 'radio', 'checkbox') ) ) {
+			if( ! in_array( $options['type'], array('select', 'textarea', 'radio', 'checkbox', 'paragraph') ) ) {
 				$options['attributes']['type'] = $options['type'];
 				$options['type']='input';
-			} 
+			}
 			if( in_array('multiple', $options['attributes'])){
 				$options['attributes']['name'] = $section.'['.$field.'][]';
 			}
-			
-			
+
+
 			//default container stuff
 			if( ! isset($options['container']) ) {
 				$options['container'] = array('class'=>'field');
@@ -400,24 +402,24 @@ class WP_Mvc_Form extends WP_Mvc_View {
 			if( isset($options['validation'])) {
 				$options['container']['class'] .= ' ' . esc_attr(str_replace('|', ' ', $options['validation']));
 			}
-			
+
 			// tweak checkbox/radio container
-			
+
 			//add required attribute from validation, for *
 			if( false !== strpos( v($options['validation']), 'required' ) ){
 				#$options['div']['class'] .= ' required';
 				$options['label'] .= '<em> * </em>';
 			}
-			
+
 		}// foreach $fields
-		
+
 		if(!isset($this->sections[$section])){
 				$this->add_section($section);
 		}
-		
+
 		$this->fields[$section] = $fields;
 	}
-	
+
 	/**
 	 * Update the field values, given a list of key/value pairs
 	 * @param array $data the list of values for each section; if $section arg is TRUE, treat $data as a nested list and process recursively
@@ -426,12 +428,12 @@ class WP_Mvc_Form extends WP_Mvc_View {
 	public function setFieldValues(array $data = array(), $section = 'default'){
 		//if given as nested sections, recurse through each section
 		if( TRUE === $section ){
-			foreach($fields as $section_id => $section){
+			foreach($data as $section_id => $section){
 				$this->setFieldValues($section, $section_id);
 			}
 			return false;
 		}
-		
+
 		//loop through provided values to update internal fields
 		foreach($data as $field_id => $value){
 			if( ! isset( $this->fields[$section] ) || ! isset( $this->fields[$section][$field_id] ) ) {
@@ -440,7 +442,7 @@ class WP_Mvc_Form extends WP_Mvc_View {
 			}
 			$this->fields[$section][$field_id]['value'] = $value;
 		}// foreach $data
-		
+
 	}//--	fn	setFieldValues
 
 	function add_section($section_id, $att=array())
@@ -459,7 +461,7 @@ class WP_Mvc_Form extends WP_Mvc_View {
 		}
 		return html::tag('form', parent::__toString(), $this->attributes + array('method' => 'post'));
 	}
-	
+
 }///---	class	WP_Mvc_Form
 
 
@@ -483,19 +485,19 @@ class WP_Mvc_Model {
 	public function __construct($filename, $module = NULL, &$query_builder = NULL) {
 		//load model file
 		$this->__f=( $module ? dirname($module) : get_stylesheet_directory().'/mvc/model' ) . "/$filename" . self::EXT;
-		
+
 		//load model file to set up variables
 		require($this->__f);
-		
+
 		/* set up default internal representations, if expected */
 		// if not explicitly declaring this a "composite", default to filename
 		if( ! isset( $this->_table ) ) {
 			$this->_table = strtolower( basename($this->__f, self::EXT) );
 		}
-		
+
 		//finish up creating
 		$this->init($query_builder);
-		
+
 		/**
 		pbug(__CLASS__. ' constructed:'
 			, "filename: $filename"
@@ -505,9 +507,9 @@ class WP_Mvc_Model {
 			, (array)$this
 			);
 		/**/
-		
+
 	}
-	
+
 	/**
 	 * Common initialization code, when not loading from simple model file
 	 * @param $query_builder {optional, reference} query builder object to use to create query strings; if omitted will use static instance of WP_QueryBuilder
@@ -526,7 +528,7 @@ class WP_Mvc_Model {
 			self::$qb = $query_builder;
 		}
 	}
-	
+
 	/**
 	 * Load a model file, return an instance of that class
 	 * @param unknown_type $model
@@ -534,12 +536,12 @@ class WP_Mvc_Model {
 	 */
 	public static function load($model, $source){
 		$file = ( $source ? dirname($source) : get_stylesheet_directory().'/mvc/model' ) . "/$model" . self::EXT;
-		
+
 		//load it if not ready
 		require_once($file);
 		return new $model();
 	}//--	fn	load
-		
+
 	/**
 	 * Table this model corresponds to
 	 * @var string
@@ -552,7 +554,7 @@ class WP_Mvc_Model {
 	private function isComposite(){
 		return ( false === $this->_table );
 	}//--	fn	isComposite
-	
+
 	/**
 	 * Column name of primary key
 	 * @var unknown_type
@@ -564,33 +566,44 @@ class WP_Mvc_Model {
 	public function pk(){
 		return v($this->_values[ $this->_pk ]);
 	}
-	
+
 	private $_values = array();
-	
+
 	/**
 	 * Get model as array
 	 */
 	public function __toArray(){
 		return (array) $this->_values;
 	}
-	
+
 	/**
 	 * Last result run
 	 * @var unknown_type
 	 */
 	private $_last_result = NULL;
-	
+
 	/**
 	 * Set an array of values (automagic???)
 	 *
 	 * @param array $a array of values
 	 */
 	public function set($a) {
-		foreach($a as$k=>$v){
+		foreach((array)$a as $k=>$v){
 			$k = trim($k);	//remove any null-char artefacts from private-method declarations in older versions of PHP
 			$this->_values[$k]=$v;
 		}
 	}//--	fn	set
+	/**
+	 * Same as set(), but clear values first
+	 * @param array $a array of values
+	 */
+	public function reset($a){
+		unset($this->_values);
+		$this->_values = array();
+		if( !empty( $a ))
+			$this->set($a);
+	}//--	fn	reset
+
 	/**
 	 * Get "property" $k
 	 * @param string $k
@@ -598,8 +611,8 @@ class WP_Mvc_Model {
 	public function __get($k){
 		return $this->_values[$k];
 	}//--	fn	__get
-	
-	
+
+
 	/**
 	 * SET "property" $k
 	 * @param string $k
@@ -608,11 +621,11 @@ class WP_Mvc_Model {
 		$this->_values[$k] = $value;
 	}//--	fn	__get
 	*/
-	
+
 	#region ------------------- DB-Interaction wrappers --------------------
-	
+
 	public static $qb;
-	
+
 	/**
 	 * Internal consistency checks before running a query
 	 */
@@ -622,18 +635,20 @@ class WP_Mvc_Model {
 			throw new WP_MvcException('Table or PK must be declared', WP_MvcException::MODEL_NO_QUERY);
 		}
 	}//--	fn	_pre_query
-	
+
 	/**
 	 * Internal consistency checks after running a query
 	 */
 	protected function _post_query(){
+		return;
+
 		$args = func_get_args();
 		global $wpdb;
-###		pbug('--- POST QUERY args // ---', $args );
-###		pbug('--- POST QUERY etc // ---', 'insert_id '. $wpdb->insert_id, 'num_rows '.$wpdb->num_rows, isset( self::$qb ) ? '<b>QUERY = </b>' . self::$qb->query() : ''/*, $wpdb->print_error()*/ );
-###		pbug('--- // POST QUERY, model ---', $this );
+		pbug('--- POST QUERY args // ---', $args );
+		pbug('--- POST QUERY etc // ---', 'insert_id '. $wpdb->insert_id, 'num_rows '.$wpdb->num_rows, isset( self::$qb ) ? '<b>QUERY = </b>' . self::$qb->query() : ''/*, $wpdb->print_error()*/ );
+		pbug('--- // POST QUERY, model ---', $this );
 	}//--	fn	_pre_query
-	
+
 	/**
 	 * Reuseable filter clause - does everything but the select and query parts
 	 * @param array $filter the filter clause declarations - given as "clause placeholders", value1, value2, ...
@@ -643,12 +658,12 @@ class WP_Mvc_Model {
 		self::$qb	//->select('*')
 			->from($this->_table)
 			;
-		
+
 		//no filter clause?
 		if( ! empty($filter) ){
 			self::$qb->where($filter);
 		}
-			
+
 		if( is_array( $orderby )) {
 			foreach($orderby as $o_clause){
 				self::$qb->orderby($o_clause[0], $o_clause[1]);
@@ -658,14 +673,14 @@ class WP_Mvc_Model {
 			self::$qb->orderby($orderby);
 		}
 	}//--	fn	_filter
-	
+
 	/**
 	 * Actually do the query
 	 * @param string $style how to run it and what to get back; {array = get_results, single = get_row, var = get_var}
 	 */
 	protected function _do_query($style = 'array'){
 		global $wpdb;
-		
+
 		//retrieve result and set internally
 		switch($style) {
 			case 'array':
@@ -677,30 +692,37 @@ class WP_Mvc_Model {
 			case 'var':
 				$results = $wpdb->get_var( self::$qb->render()->query() );
 				break;
+			case 'col':
+				$results = $wpdb->get_col( self::$qb->render()->query() );
+				break;
+			// direct query - return results accordinly
+			case 'query':
+				return $wpdb->query( self::$qb->query() );
+				break;
 		}// switch $style
-		
+
 		if( !empty( $results )) $this->set( $results );
-		
+
 		$this->_post_query($results);
 		return $results;
 	}//--	fn	_do_query
-	
+
 	/**
 	 * Retrieve model data based on primary key; assumes numeric primary key
 	 * @param mixed $pk primary key value (single)
 	 */
 	public function fetch($pk){
 		$this->_pre_query();
-		
+
 		self::$qb->select('*');
-		
+
 		$this->_filter(array($this->_pk . ' = %d', $pk));
 
 		//retrieve result and set internally
 		$results = $this->_do_query('single');
 		return $results;
 	}//--	fn	fetch
-	
+
 	/**
 	 * Filter and return
 	 * @param array $filter an array of the form ( $clause, $param1, $param2, ... ), where $clause can be the query mask or an array specifying the mask and 'join' and 'sanitize' methods, like array(clause, 'join'=>'AND', 'sanitize'=>true|pattern)
@@ -708,28 +730,30 @@ class WP_Mvc_Model {
 	 */
 	public function fetch_where($filter, $orderby = null){
 		$this->_pre_query();
-		
+
 		self::$qb->select('*');
-		
+
 		$this->_filter($filter, $orderby);
-		
+
 		//retrieve result and set internally
 		$results = $this->_do_query();
 		return $results;
 	}//--	fn	fetch_where
-	
+
 	public function count($filter, $count_for = 'GUID'){
 		$this->_pre_query();
-		
-		self::$qb->select("count($count_for)");
-		
+
+		self::$qb->select("COUNT($count_for)");
+
 		$this->_filter($filter);
-		
+
+
 		//retrieve result and set internally
 		$results = $this->_do_query('var');
+
 		return $results;
 	}
-	
+
 	/**
 	 * Save data to database
 	 * @param array $data
@@ -737,12 +761,12 @@ class WP_Mvc_Model {
 	 */
 	public function save( $data = array() ){
 		$this->_pre_query();
-		
+
 		global $wpdb;
-		
+
 		$params = $this->_values;//get_class_vars( get_class($this) );//(array)$this;
-		$params = wp_parse_args($data, $params); // array_merge($data, $params ); 
-		
+		$params = wp_parse_args($data, $params); // array_merge($data, $params );
+
 		//check if we're inserting or updating (look for presence of primary key
 		if( isset( $params[ $this->_pk ] ) && $params[ $this->_pk ] ){
 			//remove pk from submit
@@ -753,7 +777,7 @@ class WP_Mvc_Model {
 		else {
 			$isInsert = true;
 		}
-			
+
 		//get "sanitizing" placeholders
 		foreach( $params as $key => $value ){
 			if( is_numeric($value) ){
@@ -762,10 +786,10 @@ class WP_Mvc_Model {
 			else {
 				$placeholder = '%s';
 			}
-			
+
 			$placeholders []= $placeholder;
 		}
-		
+
 		//check if we're inserting or updating (look for presence of primary key
 		if( $isInsert ){
 			$this->_last_result = $wpdb->insert($this->_table, $params, $placeholders);
@@ -775,13 +799,13 @@ class WP_Mvc_Model {
 		}
 
 		$this->_post_query($this->_last_result);
-		
+
 		//first, make sure no errors returned by query, then
 		//if inserted, check that insertion was performed; otherwise check that the number of rows updated are greater than 0?
 		///TODO: is last_result false? then error; assume if rows affected > 0 then success?
 		// Altered result check `: 0 < $wpdb->num_rows` to `: 0 < $wpdb->rows_affected` to fix false negatives - AD
 		$result = (0 < $this->_last_result) && ( $isInsert ? 0 !== $wpdb->insert_id : 0 < $wpdb->rows_affected );
-		
+
 		//update internal values with submission if successful
 		if( $result ){
 			$this->set($params);
@@ -790,12 +814,75 @@ class WP_Mvc_Model {
 				$this->_values[ $this->_pk ] = $wpdb->insert_id;
 			}
 		}
-		
+
 		return $result;
 	}//--	fn	save
-	
+
+	/**
+	 * Delete data from database
+	 * @param array $data
+	 * @return result of query
+	 */
+	public function delete( $data = array() ){
+	    $this->_pre_query();
+
+	    global $wpdb;
+	    $wpdb->show_errors();
+
+	    $params = $this->_values;//get_class_vars( get_class($this) );//(array)$this;
+	    $params = wp_parse_args($data, $params); // array_merge($data, $params );
+
+	    //get "sanitizing" placeholders
+	    foreach( $params as $key => $value ){
+	        if( is_numeric($value) ){
+	            $placeholder = '%d';
+	        }
+	        else {
+	            $placeholder = '%s';
+	        }
+
+	        $placeholders []= $placeholder;
+	    }
+
+	    $formats = $format = (array) $placeholders;
+	    $fields = array_keys( $params );
+	    $formatted_fields = array();
+	    foreach ( $fields as $field ) {
+	        if ( !empty( $format ) )
+	            $form = ( $form = array_shift( $formats ) ) ? $form : $format[0];
+	        elseif ( isset( $this->field_types[$field] ) )
+	        $form = $this->field_types[$field];
+	        else
+	            $form = '%s';
+	        $formatted_fields[] = $form;
+	    }
+	    $sql = "DELETE FROM `$this->_table` WHERE ";
+	    foreach($formatted_fields as $key => $value){
+	        $sql .= ($key == 0) ? "`$fields[$key]`=$value" : " AND `$fields[$key]`=$value";
+	    }
+	    $prep_query = $wpdb->prepare( $sql, $params );
+
+	    $this->_last_result = $wpdb->query( $prep_query );
+	    $wpdb->print_error();
+
+	    $this->_post_query($this->_last_result);
+
+	    //first, make sure no errors returned by query, then
+	    //if inserted, check that insertion was performed; otherwise check that the number of rows updated are greater than 0?
+	    ///TODO: is last_result false? then error; assume if rows affected > 0 then success?
+	    // Altered result check `: 0 < $wpdb->num_rows` to `: 0 < $wpdb->rows_affected` to fix false negatives - AD
+	    $result = ( 0 < $wpdb->rows_affected );
+
+	    //update internal values with submission if successful
+	    if( $result ){
+	        $this->set($params);
+	    }
+
+	    return $result;
+	}//--	fn	delete
+
 	#endregion ------------------- DB-Interaction wrappers --------------------
-	
+
 }///---	class	WP_Mvc_Model
 
 
@@ -806,7 +893,7 @@ wp_library_include('customexception.class.php');
 /**
  * Associated error class
  * @author jeremys
- * 
+ *
  * @package WP_Library
  * @since 0.1
  *
@@ -843,13 +930,13 @@ class WP_MvcException extends CustomException {
 		 */
 		FORM_NO_FIELD = 5
 		;
-	
-		
+
+
 	public function __construct($message = null, $code = 0) {
 		if (!$message) {
 			throw new $this('Unknown '. get_class($this));
 		}
-		
+
 		$prefix = "[$code] ";
 		/*
 		switch($code){
@@ -863,10 +950,10 @@ class WP_MvcException extends CustomException {
 				break;
 		}//	switch $code
 		*/
-		
+
 		parent::__construct($prefix.$message, $code);
 	}//--	fn	__construct
-	
+
 }///---	class	WP_MvcException
 
 ?>

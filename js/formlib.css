@@ -1,10 +1,10 @@
-.fieldset { border:1px solid #efefef; margin: 5px 0px; padding:10px; }
+.fieldset { margin: 5px 0px; padding:10px; }
 legend { font-weight:bold; font-size:14px; margin:3px; }
 
-.tooltip { position: relative; }
-.tooltip .inner { position:absolute; left:-9999px; }
-.tooltip:hover .inner { left:0px; display:inline-block; min-width:200px; background-color:#fff;
-	text-indent:0px;
-	border:1px solid #03c; -moz-border-radius:5px; -webkit-border-radius:5px; border-radius:5px; }
-.tooltip .title { display:block; background-color:#018; color:#fff; font-weight:bold; padding:4px; }
-.tooltip .inner span { padding:4px; display:inline-block; }
+.tooltip { position: relative; font-style: normal; color: #7babc2; }
+	.tooltip .inner { position: absolute; left: -9999px; }
+	.tooltip:hover .inner { top: 0; left: 25px; display: inline-block; min-width: 200px; background: #c2e9fc; text-indent: 0; border: 1px solid #97d9f8; z-index: 10000; cursor: pointer;
+		-moz-border-radius: 5px; -webkit-border-radius: 5px; border-radius: 5px;
+	}
+	.tooltip .title { display: block; background: #97d9f8; font-weight: bold; padding: 4px; color: #286c8c; }
+	.tooltip .inner span { padding: 8px 4px 4px; display: inline-block; font-size: 10px; line-height: 14px; color: #286c8c; }

@@ -12,7 +12,6 @@ $validation->create_nonce($action, v($nonce_field, 'mvc_nonce'));
 print html::tag('input', 0, array('type' => 'hidden', 'value' => Session::token(), 'name' => 'token'));
 */
 
-
 foreach($sections as $section => $section_attributes)
 {
 	$section_attr_defaults = array(
@@ -33,7 +32,7 @@ foreach($sections as $section => $section_attributes)
 			$container = 'div';
 		}
 		print "\n\n<$container".(isset($data['container'])?html::attributes($data['container']):'').'>';
-	
+		
 		//only add label if it's an "allowed" type, since by default the label is taken from the field id
 		if(
 			( ! in_array( $data['type'], array('checkbox', 'radio')) )
@@ -54,6 +53,9 @@ foreach($sections as $section => $section_attributes)
 			
 		elseif('datetime_manual' === $data['type'] || 'date_time' === $data['type']) : // Special datetime type; new override, since we can use html5 datatypes
 			print html::datetime($data['value'], $field);
+			
+		elseif('paragraph' == $data['type']) : // paragraph text
+			print html::tag( v($data['attributes']['tag'], 'p'), $data['value']);
 			
 		else : // a normal input
 			print html::tag($data['type'], 0, $data['attributes']+array('value' => str($data['value'])));

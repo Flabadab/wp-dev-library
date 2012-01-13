@@ -33,8 +33,25 @@
 * @since 0.1
 * @version $Revision 0.1 $
 */
-class Inflector
+
+wp_library_include('Singleton.class.php', true);
+
+class Inflector extends Singleton
 {
+	
+	#region ---------- FACTORY --------------
+	
+	/**
+	 * Return singleton instance
+	 * Workaround for PHP < 5.3.0
+	 */
+	static public function instance(){
+		return parent::instance(__CLASS__);
+	}//--	fn	instance
+	
+	#endregion ---------- FACTORY --------------
+	
+	
     // ------ CLASS METHODS ------ //
 
     // ---- Public methods ---- //
@@ -78,7 +95,8 @@ class Inflector
         'man' => 'men',
         'child' => 'children',
         'sex' => 'sexes',
-        'move' => 'moves');
+        'move' => 'moves'
+        );
 
         $lowercased_word = strtolower($word);
 

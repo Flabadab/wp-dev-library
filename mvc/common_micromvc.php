@@ -30,12 +30,18 @@ if( !function_exists('v')):
  * BE CAREFUL - THIS WILL ACTUALLY MODIFY VALUE IF DNE, SO DO NOT USE ON GLOBALS
  * @param $value the value object
  * @param $default a default value
+ * 
+ * @return $value if set
  */
 function v(&$value, $default = NULL){
 	### pbug(__FUNCTION__, 'called');
-	return (isset($value) ? $value : $default);
+	if( isset($value) ) return $value;
+	
+	return $default;
 }//--	fn	v
+endif;
 
+if( !function_exists('kv')):
 /**
  * Get a nested value "safely" (i.e. check isset recursively), otherwise return NULL
  * @param $value the value object
@@ -80,7 +86,7 @@ endif;	//function_exists str
 if( !function_exists('post')):
 /**
  * Safely fetch a $_POST value, defaulting to the value provided if the key is
- * not found.
+ * not found.  Also - as of WP 3.0, fixes stupid escaping issues
  *
  * @param string $k the key name
  * @param mixed $d the default value if key is not found
@@ -89,7 +95,13 @@ if( !function_exists('post')):
  */
 function post($k, $d = NULL, $s = FALSE)
 {
-	if(isset($_POST[$k]))return$s?str($_POST[$k],$d):$_POST[$k];return$d;
+	if(isset($_POST[$k]))
+		return $s ? 
+			str( stripslashes_deep($_POST[$k]) ,$d)
+			:
+			stripslashes_deep($_POST[$k]);
+			
+	return $d;
 }
 endif;	//function_exists post
 
@@ -98,7 +110,7 @@ endif;	//function_exists post
 if( !function_exists('get')):
 /**
  * Safely fetch a $_GET value, defaulting to the value provided if the key is
- * not found.
+ * not found.  Also - as of WP 3.0, fixes stupid escaping issues
  *
  * @param string $k the key name
  * @param mixed $d the default value if key is not found
@@ -107,7 +119,35 @@ if( !function_exists('get')):
  */
 function get($k, $d = NULL, $s = FALSE)
 {
-	if(isset($_GET[$k]))return$s?str($_GET[$k],$d):$_GET[$k];return$d;
+	if(isset($_GET[$k]))
+		return $s ?
+			str( stripslashes_deep($_GET[$k]), $d)
+			:
+			stripslashes_deep( $_GET[$k] );
+	return $d;
+}
+endif;	//function_exists get
+
+
+
+if( !function_exists('request')):
+/**
+ * Safely fetch a $_GET or $_POST value, defaulting to the value provided if the key is
+ * not found.  Also - as of WP 3.0, fixes stupid escaping issues
+ *
+ * @param string $k the key name
+ * @param mixed $d the default value if key is not found
+ * @param boolean $s true to require string type
+ * @return mixed
+ */
+function request($k, $d = NULL, $s = FALSE)
+{
+	if(isset($_REQUEST[$k]))
+		return $s ?
+			str( stripslashes_deep($_REQUEST[$k]), $d)
+			:
+			stripslashes_deep( $_REQUEST[$k] );
+	return $d;
 }
 endif;	//function_exists get
 

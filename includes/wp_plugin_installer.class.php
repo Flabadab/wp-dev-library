@@ -193,7 +193,7 @@ abstract class WP_Plugin_Installer /*extends Singleton*/ {
 				ob_start();
 				$wpdb->print_error();
 				$error = ob_get_clean();
-				_log( "Plugin installation error on query #{$i}: ", $error );
+				_log( "Plugin installation error on query #{$i}: ", $error, $query );
 				wp_die("Error during (un)installation of plugin: could not run included query #{$i}");
 			}
 			

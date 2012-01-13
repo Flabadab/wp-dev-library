@@ -66,7 +66,7 @@ class Lang
 
 
 	/**
-	 * Fetch a language key (loading the language file if needed)
+	 * Fetch a language key (loading the language file if needed), translating as we go
 	 *
 	 * @param string $k the key name
 	 * @param string $module the module name
@@ -78,7 +78,8 @@ class Lang
 		{
 			self::load(self::choose($module), $module/*, self::$last_rel_to*/);
 		}
-		return __(self::$lang[$module][$key], $module);
+		// return label if it exist; if not return the label identifier
+		return __( (isset(self::$lang[$module][$key]) ? self::$lang[$module][$key] : $key), $module);
 	}
 
 

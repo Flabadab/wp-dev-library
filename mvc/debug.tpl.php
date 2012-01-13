@@ -97,7 +97,7 @@ function highlight($string)
 <section id="debug-session">
 <?php if(!empty($_SESSION)) { ?>
 <b>Session Data</b>
-<?php print dump($_SESSION); ?>
+<?php pdump($_SESSION); ?>
 <?php } ?>
 </section>
 

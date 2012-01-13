@@ -132,7 +132,7 @@ public static function radios($name, $label, $type = 'radio', array $options = a
 			$a['checked'] = 'checked';
 		}
 
-		$h .= self::tag('span', self::tag('label', $v, array('for'=>$a['id'])) . self::tag('input', 0, $a) );
+		$h .= self::tag('div', self::tag('input', 0, $a) . self::tag('label', $v, array('for'=>$a['id'])), array('class' => 'field radio inline-label') );
 	}
 
 	if( ! $attributes) {

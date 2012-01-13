@@ -109,7 +109,7 @@ var	LIB = {
 			, regex : {
 					email : {exp: /^([A-Za-z0-9_\-\.\+])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/, msg: 'Invalid email'}
 					,phone : {exp: /^[(]?\d{3}[)]?[-. ]?\d{3}[-. ]?\d{4}$/, msg:'Invalid phone'}
-					,numeric: {exp:/^\d*$/, msg:'Numbers only'}
+					,numeric: {exp:/^[-\d]*$/, msg:'Numbers only'}
 					,alpha: {exp:/^[\w\s]*$/, msg:'Letters only'}
 					,alpha_numeric: {exp:/^[\w\s\d]*$/, msg:'Letters or numbers only'}
 					,simple_chars: {exp:/^[\w\s\d-\.\'\"]*$/, msg:'Invalid characters - please only use letters, numbers, spaces, and the following: . - \' "'}
@@ -182,6 +182,7 @@ var	LIB = {
 						
 						$tooltip
 							.addClass('icon')
+							.addClass('summary')
 							.html( '<a class="info"><span class="inner"><strong class="title">' + title + '</strong><span>' + text + '</span></span></a>' );
 					});
 				}// if not already has tooltip

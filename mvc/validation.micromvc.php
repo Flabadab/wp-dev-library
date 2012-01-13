@@ -134,9 +134,8 @@ class Validation
 				}
 			}
 
-			// Commit any changes
+			// Commit any changes (for later access)
 			$_POST[$section_id][$field] = $data;
-			//save values for later
 			
 		}// foreach fields in section
 		endforeach;//	foreach sections
@@ -381,7 +380,22 @@ class Validation
 
 
 	/**
-	 * Numeric
+	 * Numeric digits (0-9) only
+	 *
+	 * @param string $field name of the form element
+	 * @param mixed $number to validate
+	 * @return boolean
+	 */
+	public function digits_only($field, $number)
+	{
+		//if(is_numeric($number)) return TRUE;
+		if(ctype_digit($number) || empty($number) ) return TRUE;
+		$this->errors[$field] = sprintf(Lang::get('validation_numeric'), $field);
+		return FALSE;
+	}
+
+	/**
+	 * Number - different than numeric
 	 *
 	 * @param string $field name of the form element
 	 * @param mixed $number to validate
@@ -390,11 +404,11 @@ class Validation
 	public function numeric($field, $number)
 	{
 		//if(is_numeric($number)) return TRUE;
-		if(ctype_digit($number) || empty($number) ) return TRUE;
+		if(is_numeric($number) || empty($number) ) return TRUE;
 		$this->errors[$field] = sprintf(Lang::get('validation_numeric'), $field);
 		return FALSE;
 	}
-
+	
 	#region -------------- ABT custom methods -----------------------
 	
 	/**

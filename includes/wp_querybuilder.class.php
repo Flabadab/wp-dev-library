@@ -93,6 +93,26 @@ class WP_QueryBuilder {
 	
 	#region ------------------- CLAUSES & CONDITIONALS -----------------------
 	
+	private $_action = 'select';
+	
+	/**
+	 * Set the type of query - select, update, insert, delete
+	 * @param $action what to do; if given action is unrecognised, will fallback to "select"
+	 */
+	public function action( $action ) {
+		switch( $action ) {
+			case 'select':
+			case 'update':
+			case 'insert':
+			case 'delete':
+				$this->_action = $action;
+				break;
+			default:
+				$this->_action = 'select';
+				break;
+		}
+	}//--	fn	action
+	
 	/**
 	 * Remove an aspect from the query array
 	 * @param string $aspect what part of the query to remove (select, where, etc)
@@ -152,9 +172,33 @@ class WP_QueryBuilder {
 	 * @param string $clause
 	 */
 	public function select($clause){
-		return $this->clause($clause, 'select');
+		$this->_action = 'select';
+		return $this->clause($clause, $this->_action);
 	}
-	
+	/**
+	 * Chain a clause
+	 * @param string $clause
+	 */
+	public function insert($clause){
+		$this->_action = 'insert';
+		return $this->clause($clause, $this->_action);
+	}
+	/**
+	 * Chain a clause
+	 * @param string $clause
+	 */
+	public function update($clause){
+		$this->_action = 'update';
+		return $this->clause($clause, $this->_action);
+	}
+	/**
+	 * Chain a clause
+	 * @param string $clause
+	 */
+	public function delete($clause){
+		$this->_action = 'delete';
+		return $this->clause($clause, $this->_action);
+	}	
 	/**
 	 * Chain a clause
 	 * @param string $table
@@ -170,6 +214,14 @@ class WP_QueryBuilder {
 	 */
 	public function orderby($clause, $sort = false){
 		return $this->clause($clause. ' ' . $sort, 'orderby');
+	}
+	
+	/**
+	 * Chain a groupby clause
+	 * @param string $clause what to group by
+	 */
+	public function groupby($clause){
+		return $this->clause($clause, 'groupby');
 	}
 	
 	/**
@@ -286,14 +338,45 @@ class WP_QueryBuilder {
 	 * Build and return the query string
 	 */
 	public function render(){
-		$select = implode(' , ', $this->_querray['select']);
-		$from = implode(' , ', $this->_querray['from']);
 		
 		//start the query with the basics that'll be there
-		$this->_queryString = sprintf("SELECT %s \nFROM %s \n"
-			, $select
-			, $from
-		);
+		switch( $this->_action ) {
+			case 'select':
+				$actees = implode(' , ', $this->_querray[$this->_action]);
+				$from = implode(' , ', $this->_querray['from']);
+				
+				$this->_queryString = sprintf("SELECT %s \nFROM %s \n"
+					, $actees
+					, $from
+				);
+				break;
+			case 'update':
+				$actees = implode(' , ', $this->_querray[$this->_action]);
+				$from = implode(' , ', $this->_querray['from']);
+				
+				$this->_queryString = sprintf("UPDATE %s \nSET %s \n"
+					, $from
+					, $actees
+				);
+				break;
+			case 'insert':
+				$actees = implode(' , ', $this->_querray[$this->_action]);
+				$from = implode(' , ', $this->_querray['from']);
+				
+				$this->_queryString = sprintf("INSERT INTO %s \nVALUES (%s) \n"
+					, $from
+					, $actees
+				);
+				break;
+			case 'delete':
+				$from = implode(' , ', $this->_querray['from']);
+				
+				$this->_queryString = sprintf("DELETE FROM %s \n"
+					, $from
+				);
+				break;
+		}
+		
 		
 		//now add the rest
 		
@@ -378,16 +461,21 @@ class WP_QueryBuilder {
 			); 
 		endif;	//orderby
 		
-		//orderby
+		//limit
 		if(isset($this->_querray['limit']) && !empty($this->_querray['limit'])):
 			$this->_queryString = sprintf("%s \nLIMIT %s "
 				, $this->_queryString
 				, implode(' , ', $this->_querray['limit'])
 			); 
-		endif;	//orderby
+		endif;	//limit
 
 		//groupby
-		///TODO
+		if(isset($this->_querray['groupby']) && !empty($this->_querray['groupby'])):
+			$this->_queryString = sprintf("%s \nGROUP BY %s "
+				, $this->_queryString
+				, implode(' , ', $this->_querray['groupby'])
+			);
+		endif;	//groupby
 		
 		//chain, to get ->query later
 		return $this;
@@ -470,6 +558,20 @@ class WP_QueryBuilder {
 		
 		return $wpdb->prepare($query, $args);
 	}//--	fn	prepare
+	
+	/**
+	 * Allow direct query writing - but run through $wpdb->prepare() first
+	 * @param string $query the query to run - may contain placeholders (for prepare)
+	 * @param list $etc the rest of the optional parameters -- will be used in prepare statement if given
+	 */
+	public function direct_query($query){
+		global $wpdb;	//needed for core prepare
+		$args = func_get_args();
+		array_shift($args);	// get rid of the first arg - is already required and set
+		
+		$this->_queryString = $wpdb->prepare($query, $args);
+		
+	}//--	fn	direct_query
 	
 	#endregion ------------------- STATIC STUFF -----------------------
 	
