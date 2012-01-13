@@ -1,5 +1,5 @@
 === WP-Library ===
-Contributors: atlanticbt,zaus
+Contributors: atlanticbt, zaus, tnblueswirl
 Donate link: http://atlanticbt.com
 Tags: core, extensions, common, reuse, library, mvc, model-view-controller, options, query builder
 Requires at least: 3.0
