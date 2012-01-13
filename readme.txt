@@ -109,6 +109,25 @@ the directory of the stable readme.txt, so in this case, `/tags/4.3/screenshot-1
 
 == Changelog ==
 
+= 0.4 =
+new functionality, various bugfixes, improvements
+
+* inflector as Singleton
+* slightly better plugin installer logging
+* querybuilder: more methods (update, delete, select, insert), direct query, groupby
+* minor formlib css/js fixes?
+* post/get/request helper functions fix WP autoescaping
+* form view allows P tag
+* STAMP styling for radio input
+* minor lang handling change
+* form validation - difference between strict digits and numeric
+* minor bugfixes and tweaks for wp_mvc implementation (stripslashes, request already merged, some db interaction wrapper changes, etc)
+* _new:_ user impersonation class
+* _new:_ payment gateway shell + authorize.net integration
+* _new:_ time helpers
+* _new:_ state/country list
+
+
 = 0.3 =
 * turned into a plugin
 * not totally tested all files
