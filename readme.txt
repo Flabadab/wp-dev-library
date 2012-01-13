@@ -51,10 +51,10 @@ Provides a foundation and extensions for/to common Wordpress developer functions
 Alternatively, you could instead create another folder at the same level as your plugins directory, called `library`.  If you do so, you must explicitly include the "routing" file `wp-library-init.php` from somewhere (i.e. your theme `functions.php`).
 
 So your structure could look something like:
-		`wp-content`
-			- `plugins`
-			- `themes`
-			- `library`
+    `wp-content`
+    	- `plugins`
+    	- `themes`
+    	- `library`
 
 
 == Frequently Asked Questions ==
