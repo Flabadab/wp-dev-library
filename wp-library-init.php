@@ -3,7 +3,8 @@
 Plugin Name: WP-Library
 Plugin URI: http://atlanticbt.com/
 Description: Provides a foundation and extensions for/to common Wordpress functions or tasks, such as creating and installing plugins, making complex database queries, etc
-Version: 0.4
+Version: 0.4.1
+Provides: wp-dev-library
 Author: atlanticbt, zaus, tnblueswirl
 Author URI: http://www.atlanticbt.com/
 License: GPLv2 or later
@@ -33,16 +34,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * @subpackage WP_Library
  * @since MM-Solid Rock 1.0, MPS Society 1.0
  * 
- * @version 0.4
+ * @version 0.4.1
  * 
  * HISTORY:
  * 	- 0.1	creation, shared stuff
  * 	- 0.2	mvc stub
  * 	- 0.2.1	form validation, lang
  *	- 0.3	turned into a plugin
- * 	- 0.3.1	authors
- * 	- 0.4	integrating various updates
- */
+ *	- 0.4	reintegrated adam daniel's (tnblueswirl) fixes
+ *  - 0.4.1	plugin-dependency inclusion
+ *  */
 /*
  * Use this section to include other library files that should be available globally.
  * Basically just used so that you can include all the other files by including this one.
@@ -82,20 +83,25 @@ if( ! function_exists('wp_library_include') ):
  * @param $isOnce {true} *_once() if specified
  */
 function wp_library_include($shortpath, $isRequired = false, $isOnce = true){
+	$path = wp_library_path($shortpath);
+	if( WP_DEBUG && !file_exists($path) ) {
+		throw new Exception( "Could not include/require file {{$shortpath}}, originally requested in " . abt_debug::calling_file() );
+	}
+	
 	if( $isRequired ){
 		if( $isOnce ){
-			require_once(wp_library_path($shortpath));
+			require_once($path);
 		}
 		else {
-			require(wp_library_path($shortpath));
+			require($path);
 		}
 	}// isRequired
 	else {
 		if( $isOnce ){
-			include_once(wp_library_path($shortpath));
+			include_once($path);
 		}
 		else {
-			include(wp_library_path($shortpath));
+			include($path);
 		}
 	}// not required
 }//--	fn	wp_library_include
@@ -115,8 +121,19 @@ endif;	//func-exists
 wp_library_include('includes/common-functions.php');	//library file - Shared functions to be available to other files
 wp_library_include('mvc/common_micromvc.php');	//more shared functions - mainly for micromvc/mvc files, but helpful in general: v() and kv()
 wp_library_include('includes/wp_library_base.class.php');	//root class for library - inheritable common methods
-#wp_library_include('wp_pagination.class.php' );	// pagination helper
-#wp_library_include('wp_querybuilder.class.php' );	// complex-sql statement builder
+#wp_library_include('includes/wp_pagination.class.php' );	// pagination helper
+#wp_library_include('includes/wp_querybuilder.class.php' );	// complex-sql statement builder
+
+/*
+function wp_dev_library_autoloader($class){
+	///TODO: figure out fancy folder structure
+	$path = str_replace('__', '/', strtolower($class) ) . '.class.php';
+	
+	wp_library_include("includes/$path");
+}
+spl_autoload_register('wp_dev_library_autoloader');
+*/
+
 
 #endregion ========================== FILE INCLUSIONS =============================
 
@@ -143,6 +160,10 @@ class WP_Library_Plugin extends WP_Library_Base {
 	private $settings;
 
 	public function __construct(){
+		
+		// add the neato dependency checker
+		// based on discussion here: http://core.trac.wordpress.org/ticket/11308
+		register_activation_hook(__FILE__, array(__CLASS__, 'resolve_dependencies'));
 		
 		wp_library_include('includes/wp_options_page.class.php');	//options page helper
 
@@ -221,10 +242,39 @@ class WP_Library_Plugin extends WP_Library_Base {
 					))
 					;
 	}//--	fn	admin_init
-
+	
+	/**
+	 * Helper function to load the plugin-dependencies plugin checker thingy
+	 */
+	public static function resolve_dependencies(){
+		// check if the plugin is available
+		if( !is_plugin_active('plugin-dependencies/plugin-dependencies.php') ) {
+			// load manually
+			activate_plugin(WP_PLUGIN_DIR . '/plugin-dependencies/plugin-dependencies.php', '', TRUE);
+		}
+	}//--	fn	resolve_dependencies
+	
 }///---	class	WP_Library_Plugin
 
 //call it
 new WP_Library_Plugin();
 
 #endregion ========================== ADMIN PAGE =============================
+
+
+
+
+/**
+ * Provide hook for dependent plugins
+ * @see http://core.trac.wordpress.org/ticket/11308#comment:7
+ * @usage
+ * function dependent_prefix_init() {
+ *    // add all bootstrap stuff here
+ *    // no code should run "live"
+ * }
+ * add_action( 'my_plugin_prefix_init', 'dependent_prefix_init' );
+ */
+function wp_dev_library_dependency_point(){
+	do_action('has_wp_dev_library_dependency');
+}
+add_action( 'plugins_loaded', 'wp_dev_library_dependency_point' );

@@ -1,6 +1,6 @@
 <?php
 
-wp_library_include('wp_payment_gateway_shell.php');
+wp_library_include('includes/wp_payment_gateway_shell.php');
 
 class AuthNet_Gateway extends WP_Payment_Gateway_Shell {
 	

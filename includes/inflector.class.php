@@ -34,7 +34,7 @@
 * @version $Revision 0.1 $
 */
 
-wp_library_include('Singleton.class.php', true);
+wp_library_include('includes/Singleton.class.php', true);
 
 class Inflector extends Singleton
 {

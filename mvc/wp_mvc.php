@@ -889,7 +889,7 @@ class WP_Mvc_Model {
 
 
 
-wp_library_include('customexception.class.php');
+wp_library_include('includes/customexception.class.php');
 /**
  * Associated error class
  * @author jeremys
