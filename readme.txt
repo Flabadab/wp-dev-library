@@ -128,7 +128,9 @@ new functionality, various bugfixes, improvements
 * _new:_ payment gateway shell + authorize.net integration
 * _new:_ time helpers
 * _new:_ state/country list
-
+* fixed includes to match folder restructuring
+* split off debug functions; only included if debug mode is turned on
+* trying a bunch of different plugin dependency checking (bootstrap-hook is the one that works, but also including plugin-dependencies plugin metadata directives)
 
 = 0.3 =
 * turned into a plugin
