@@ -134,15 +134,43 @@ function hbug(){
 endif;
 
 
+if( ! function_exists('pdump') ) :
+/**
+ * Print Debug output - in HTML comment
+ * @param $title {optional} if first argument starts with '--' or '__' or '|', it'll print as a title
+ * @param mixed $etc the rest of the things to print
+ */
+function pdump(){
+	$args = func_get_args();
+
+	mybug_render($args, array(
+		'#wrapper_open' => "\n<!-- debug-%s \n",
+		'#wrapper_close' => "\n -->\n",
+		'#title' => "\n	--- %s ---\n",
+		'#item_open' => "\n	------------\n",
+		'#item_close' => "\n	------------\n",
+		#'style' => 'print_r' | 'var_export' | 'myprint_r'
+		'style' => 'var_export'
+	));
+}//--	fn	pdump
+endif;
+
+
+
 if( !function_exists('debug_whereat')):
 /**
  * Pretty-print debug_backtrace()
- * @param int $limit when to stop printing - how many recursions up
- */
-function debug_whereat($limit = false){
-	$uid = microtime();
+ * @param int $limit {optional} when to stop printing - how many recursions up/down
+ * @param int $skip {optional} when to start printing - how many calls to skip over
+ * @param string $before {optional} extra html to print before the table, inside debug container
+ * @param string $after {optional} extra html to print before the table, inside debug container
+ *  */
+function debug_whereat($limit = false, $skip = false, $before = '', $after = ''){
+	static $debug_whereat_counter; if( !$debug_whereat_counter) $debug_whereat_counter = 0;
+	$uid = $debug_whereat_counter++;
 	?>
 	<div class="debug trace">
+		<?php echo $before; ?>
 	<table>
 		<thead><tr>
 			<th id="th-index-<?=$uid?>"><i>nth</i></th>
@@ -154,16 +182,15 @@ function debug_whereat($limit = false){
 	<?php
 	
 	$backtrace = debug_backtrace();
+	if( $skip ) $backtrace = array_slice($backtrace, $skip);
 	
 	foreach($backtrace as $index => $trace){
 		//force quit
 		if($limit !== false && $index == $limit){
 			?>
-			</tbody></table>
-			<em>----- FORCE QUIT -----</em>
-			</div>
+			<tr><td colspan="4"><em>----- FORCE STOP RECURSION -----</em></td></tr>
 			<?php
-			return;
+			break;
 		}
 		
 		?>
@@ -186,7 +213,7 @@ function debug_whereat($limit = false){
 		<?php
 	}
 	?>
-	</tbody></table></div>
+	</tbody></table><?php echo $after; ?></div>
 	<?php
 
 }//	function debug_whereat
@@ -217,4 +244,17 @@ class abt_debug {
 
 
 
-?>
+
+/**
+ * Because new WP 3.3 "doing it wrong" warnings don't really tell you where you f*'d up...
+ * @param string $function The function that was called.
+ * @param string $message A message explaining what has been done incorrectly.
+ * @param string $version The version of WordPress where the message was added.
+ */
+function abt_doing_it_wrong_helper($function, $message, $version){
+	$before = <<<EOD
+<strong>$function:</strong> v$version
+EOD;
+	debug_whereat(3, 5, $before);
+}
+add_action( 'doing_it_wrong_run', 'abt_doing_it_wrong_helper', 10, 3 );

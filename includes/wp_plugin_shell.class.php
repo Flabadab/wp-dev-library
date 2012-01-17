@@ -429,12 +429,13 @@ abstract class WP_Plugin_Shell {
 	else:
 	/**
 	 * Add an admin notice
+	 * @param string $key an identifier for nag
 	 * @param string $msg the message string - will appear within p tags
 	 * @param string $type {default = 'info'} what kind of message: {warning, error, info = updated}
 	 * @param array $options extra options like pages (array of specific pages), capabilities (array for current_user_can), nag (dismissible)
 	 */
-		function add_admin_notice($msg, $type = 'info', $options = array()){
-			WP_Plugin_Shell::add_notice($msg, $type, $options);
+		function add_admin_notice($key, $msg, $type = 'info', $options = array()){
+			WP_Plugin_Shell::add_notice($key, $msg, $type, $options);
 		}
 	endif;
 	

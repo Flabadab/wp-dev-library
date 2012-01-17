@@ -1,7 +1,7 @@
 <?php
 
 //add query logging
-if( defined('WP_DEBUG') ) define('SAVEQUERIES', true);
+if( defined('WP_DEBUG') && !defined('SAVEQUERIES') ) define('SAVEQUERIES', true);
 
 /**
  * Simple helper class to build MySQL query strings, chaining

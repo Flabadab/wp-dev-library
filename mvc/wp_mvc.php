@@ -23,6 +23,45 @@ class WP_Mvc_Controller {
 		, PARAMS_KEY = 'params'
 		;
 
+	#region ----------------- PERMISSIONS ---------------
+	/**
+	 * Who can do this
+	 * @var array
+	 */
+	protected $capabilities;
+	/**
+	 * Check through given capabilities/roles (or use internal list); use this function globally in controller constructor or in specific actions
+	 * @param array $capabilities {optional, default $this->capabilities} list of roles or capabilities (used with current_user_can)
+	 * @return true if user is allowed, false if not.
+	 */
+	protected function allowed( $capabilities = NULL ) {
+		if( !$capabilities ) $capabilities = $this->capabilities;
+		if( !$capabilities ) return true;	// nothing to limit
+		
+		foreach( (array)$capabilities as $permission){
+			if( ! current_user_can( $permission ) ) return false;
+		}
+		return true;
+	}//--	fn	allowed
+	/**
+	 * Deprecated v0.4 - use $this->allowed instead
+	 */
+	protected function allow( array $capabilities ){
+		_deprecated_function( __FUNCTION__, '0.4', 'allowed()' );
+		return $this->allowed($capabilities);
+	}
+	/**
+	 * Helper function to limit and die to specific capabilities
+	 * @param string $capabilities comma-separated list of capabilities
+	 * @param string $title {optional} 'XYZ' for "Access Denied for XYZ"
+	 */
+	protected function limit_to($capabilities, $title = ''){
+		if( ! $this->allowed( $capabilities ) ){
+			wp_die('LIMITED: You do not have permissions to access this page', 'Access Denied for '. $title . Lang::get('Products', ABT_Ecom::N));
+		}
+	}//--	fn	limit_to
+	#endregion ----------------- PERMISSIONS ---------------
+
 	/**
 	 * What to render as the shell
 	 * @var string
@@ -151,19 +190,6 @@ class WP_Mvc_Controller {
 	}//--	fn	page
 
 	/**
-	 * Check through given capabilities/roles,
-	 * @param array $capabilities list of roles or capabilities (used with current_user_can)
-	 * @return true if user is allowed, false if not.
-	 */
-	protected function allow( array $capabilities ) {
-		foreach($capabilities as $permission){
-			if( ! current_user_can( trim($permission) ) ) return false;
-		}
-		return true;
-	}//--	fn	allow
-
-
-	/**
 	 * Get the given MVC parameter from the url
 	 * @param string $key {optional} if given, return value of specified parameter; if omitted, returns entire parameter list
 	 * @param string $section {optional} if given, use this to get a second-level param (from a nested array)
@@ -271,7 +297,11 @@ public function set($a) {
  * @return string
  */
 public function __toString() {
-	ob_start();extract((array)$this);require$__f;return ob_get_clean();
+	ob_start();
+	if( WP_DEBUG ) echo '<div class="debug view-file"><small>--View[' , str_replace(ABSPATH, '', $this->__f), "]--</small></div>\n";
+	extract((array)$this);
+	require $__f;
+	return ob_get_clean();
 }
 
 /**
@@ -520,6 +550,7 @@ class WP_Mvc_Model {
 		if( NULL === $query_builder ){
 			//only make a new one if it's not already there; saves memory?
 			if( ! isset( self::$qb ) ){
+				wp_library_include('includes/wp_querybuilder.class.php', true);
 				self::$qb = new WP_QueryBuilder();
 			}
 		}
