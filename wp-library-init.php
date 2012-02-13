@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: WP-Library
+Plugin Name: WP-DEV-Library
 Plugin URI: http://atlanticbt.com/
 Description: Provides a foundation and extensions for/to common Wordpress functions or tasks, such as creating and installing plugins, making complex database queries, etc
 Version: 0.4.1

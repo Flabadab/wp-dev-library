@@ -1,4 +1,4 @@
-=== WP-Library ===
+=== WP-DEV-Library ===
 Contributors: atlanticbt, zaus, tnblueswirl
 Donate link: http://atlanticbt.com
 Tags: core, extensions, common, reuse, library, mvc, model-view-controller, options, query builder
