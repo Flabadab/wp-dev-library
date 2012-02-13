@@ -739,7 +739,7 @@ class WP_Mvc_Model {
 	}//--	fn	_do_query
 
 	/**
-	 * Retrieve model data based on primary key; assumes numeric primary key
+	 * Retrieve model data based on primary key
 	 * @param mixed $pk primary key value (single)
 	 */
 	public function fetch($pk){
@@ -747,7 +747,7 @@ class WP_Mvc_Model {
 
 		self::$qb->select('*');
 
-		$this->_filter(array($this->_pk . ' = %d', $pk));
+		$this->_filter(array($this->_pk . ' = ' . $this->_data_placeholder($this->_pk), $pk));
 
 		//retrieve result and set internally
 		$results = $this->_do_query('single');
@@ -786,6 +786,25 @@ class WP_Mvc_Model {
 	}
 
 	/**
+	 * Return the appropriate placeholder for the given data, based on type
+	 * @param mixed $value the singular data value to examine
+	 * 
+	 * @return string the database command datatype placeholder (i.e. %s, %d, etc)
+	 */
+	private function _data_placeholder(&$value){
+		if( is_float( $value ) ) {
+				return '%f';
+			}
+			elseif( is_numeric($value) ){
+				return '%d';
+			}
+			else {
+				return '%s';
+			}
+		
+	}//--	fn	_datatype_placeholder
+
+	/**
 	 * Save data to database
 	 * @param array $data
 	 * @return result of query
@@ -811,14 +830,7 @@ class WP_Mvc_Model {
 
 		//get "sanitizing" placeholders
 		foreach( $params as $key => $value ){
-			if( is_numeric($value) ){
-				$placeholder = '%d';
-			}
-			else {
-				$placeholder = '%s';
-			}
-
-			$placeholders []= $placeholder;
+			$placeholders []= $this->_data_placeholder($value);
 		}
 
 		//check if we're inserting or updating (look for presence of primary key
@@ -826,7 +838,7 @@ class WP_Mvc_Model {
 			$this->_last_result = $wpdb->insert($this->_table, $params, $placeholders);
 		}
 		else {
-			$this->_last_result = $wpdb->update($this->_table, $params, array( $this->_pk => $pk), $placeholders, (is_numeric($pk) ? '%d' : '%s'));
+			$this->_last_result = $wpdb->update($this->_table, $params, array( $this->_pk => $pk), $placeholders, $this->_data_placeholder($pk));
 		}
 
 		$this->_post_query($this->_last_result);
@@ -865,14 +877,7 @@ class WP_Mvc_Model {
 
 	    //get "sanitizing" placeholders
 	    foreach( $params as $key => $value ){
-	        if( is_numeric($value) ){
-	            $placeholder = '%d';
-	        }
-	        else {
-	            $placeholder = '%s';
-	        }
-
-	        $placeholders []= $placeholder;
+	        $placeholders []= $this->_data_placeholder($value);
 	    }
 
 	    $formats = $format = (array) $placeholders;
