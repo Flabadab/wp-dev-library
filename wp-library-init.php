@@ -3,7 +3,7 @@
 Plugin Name: WP-Library
 Plugin URI: http://atlanticbt.com/
 Description: Provides a foundation and extensions for/to common Wordpress functions or tasks, such as creating and installing plugins, making complex database queries, etc
-Version: 0.3.1
+Version: 0.3.2
 Author: atlanticbt, zaus, tnblueswirl
 Author URI: http://www.atlanticbt.com/
 License: GPLv2 or later
@@ -32,9 +32,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * @package AtlanticBT_Common
  * @subpackage WP_Library
  * @since MM-Solid Rock 1.0, MPS Society 1.0
- * 
+ *
  * @version 0.3.1
- * 
+ *
  * HISTORY:
  * 	- 0.1	creation, shared stuff
  * 	- 0.2	mvc stub
@@ -142,9 +142,9 @@ class WP_Library_Plugin extends WP_Library_Base {
 	private $settings;
 
 	public function __construct(){
-		
-		wp_library_include('includes/wp_options_page.class.php');	//options page helper
-
+	    if( !class_exists('WP_Options_Page') ) {
+	        wp_library_include('includes/wp_options_page.class.php');	//options page helper
+	    }
 		//create settings pages
 		$this->settings = array();
 		$this->settings['main'] = new WP_Options_Page($this->N);

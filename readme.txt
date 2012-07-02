@@ -108,6 +108,8 @@ the directory of the stable readme.txt, so in this case, `/tags/4.3/screenshot-1
 2. This is the second screen shot
 
 == Changelog ==
+= 0.3.2 =
+* Fixed some conflicts between Custom User Registration and WP-Library plugins
 
 = 0.3.1 =
 * more authors
